@@ -83,6 +83,18 @@ const components: Components = {
     <td className="px-3 py-2 align-top text-sm text-foreground">{children}</td>
   ),
   hr: () => <hr className="my-4 border-border" />,
+  // Models sometimes invent `attachment:...` URLs for screenshots. Real images
+  // arrive as AI SDK file parts; skip these fake markdown images.
+  img: ({ src, alt }) => {
+    if (!src || src.startsWith("attachment:")) return null;
+    return (
+      <img
+        src={src}
+        alt={alt ?? ""}
+        className="my-3 max-h-64 max-w-full rounded-md border border-border object-contain"
+      />
+    );
+  },
 };
 
 export function Markdown({ content }: { content: string }) {

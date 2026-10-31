@@ -176,7 +176,7 @@ export function Message({
       >
         {isUser ? (
           <>
-            <UserFiles parts={message.parts} />
+            <MessageFiles parts={message.parts} align="end" />
             {text ? (
               <div className="whitespace-pre-wrap break-words rounded-2xl bg-user-bubble px-4 py-2.5 text-foreground">
                 {text}
@@ -221,6 +221,8 @@ export function Message({
 
               return null;
             })}
+
+            <MessageFiles parts={message.parts} />
 
             {text ? (
               <div className="break-words">
@@ -333,14 +335,25 @@ function ToolActivity({ details }: { details: ToolPart[] }) {
   );
 }
 
-function UserFiles({ parts }: { parts: UIMessage["parts"] }) {
+function MessageFiles({
+  parts,
+  align = "start",
+}: {
+  parts: UIMessage["parts"];
+  align?: "start" | "end";
+}) {
   const files = parts.filter(
     (part): part is { type: "file"; mediaType: string; url: string; filename?: string } =>
       part.type === "file",
   );
   if (files.length === 0) return null;
   return (
-    <div className="flex flex-col items-end gap-2">
+    <div
+      className={cn(
+        "flex flex-col gap-2",
+        align === "end" ? "items-end" : "items-start",
+      )}
+    >
       {files.map((file) =>
         file.mediaType.startsWith("image/") ? (
           <img
