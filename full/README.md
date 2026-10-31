@@ -22,6 +22,10 @@ Runs on [http://localhost:3002](http://localhost:3002).
 - Markdown assistant replies
 - Collapsed “Used N tools” activity
 - Inline elicitation forms (`addToolOutput`)
+- Computer screenshots arrive as normal AI SDK `file` parts (when the tool sets `share_with_user`)
+- MCP Apps: stream `data-mcp-app`; host the iframe via
+  `POST /api/v2/agents/{id}/threads/{threadId}/apps/bridge`
+  (`tools/call`, `resources/read`, `ui/update-model-context`)
 
 ## Layout
 
