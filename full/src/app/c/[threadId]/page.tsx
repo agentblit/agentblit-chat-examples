@@ -11,9 +11,9 @@ type Props = {
 
 export default function ThreadPage({ params }: Props) {
   const { threadId } = use(params);
-  const { chatUrl, threadsUrl, uploadUrl } = getConfig();
+  const { appUrl, agentId, chatUrl, threadsUrl, uploadUrl } = getConfig();
 
-  if (!chatUrl || !threadsUrl || !uploadUrl) {
+  if (!appUrl || !agentId || !chatUrl || !threadsUrl || !uploadUrl) {
     return <EnvMissing />;
   }
 
@@ -23,6 +23,8 @@ export default function ThreadPage({ params }: Props) {
 
   return (
     <ChatApp
+      appUrl={appUrl}
+      agentId={agentId}
       chatUrl={chatUrl}
       threadsUrl={threadsUrl}
       uploadUrl={uploadUrl}

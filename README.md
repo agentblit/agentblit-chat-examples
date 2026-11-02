@@ -32,6 +32,7 @@ pnpm dev
 ```http
 POST {API_BASE}/api/v2/agents/{agentId}/chat
 Content-Type: application/json
+Authorization: Bearer <chat-jwt>   # required when agent access is not public
 
 { "id": "<thread id>", "messages": [ /* AI SDK UI messages */ ] }
 ```
@@ -41,5 +42,22 @@ Content-Type: application/json
 - Approvals / elicitation resume the same assistant message.
 - Optional: threads CRUD and file upload (used by `full/`).
 
-Start with **`simplest/`**. Copy that wiring into your app, then pull pieces
-from **`full/`** only when you need them.
+### Auth (non-public agents)
+
+Agent access is set in the Agentblit console (**Access**): `public`,
+`authenticated`, or `allowlist`.
+
+1. Add your example origin under **Allowed origins** (e.g. `http://localhost:3002`).
+2. On `401`, send the user through Agentblit Sign in:
+   `{APP_URL}/chat/authorize?agent_id=…&origin={window.location.origin}`
+   (use `popup=1` for embeds; top-level apps can omit it and handle
+   `/auth/chat/callback`).
+3. Exchange the one-time code: `POST /api/v2/agents/{id}/session` `{ "code" }` → JWT.
+4. Send `Authorization: Bearer <token>` on chat, threads, and upload.
+5. On `403`, the signed-in user is not on the allowlist.
+
+**`full/`** implements this end to end. **`simplest/`** is still public-only —
+copy `full/src/lib/auth.ts` and the callback route when you need gated access.
+
+Public agents need no token. For thread separation from a custom origin, send
+`X-Agentblit-User: <stable-anonymous-id>` (public mode only).

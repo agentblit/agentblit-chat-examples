@@ -1,4 +1,5 @@
 import type { FileUIPart } from "ai";
+import { chatAuthHeaders } from "@/lib/auth";
 
 type Ticket = {
   filename: string;
@@ -11,12 +12,16 @@ type Ticket = {
 export async function uploadChatFiles(
   uploadUrl: string,
   files: File[],
+  agentId: string,
 ): Promise<FileUIPart[]> {
   if (files.length === 0) return [];
 
   const ticketRes = await fetch(uploadUrl, {
     method: "POST",
-    headers: { "Content-Type": "application/json" },
+    headers: {
+      "Content-Type": "application/json",
+      ...chatAuthHeaders(agentId),
+    },
     body: JSON.stringify({
       files: files.map((file) => ({
         filename: file.name || "file",

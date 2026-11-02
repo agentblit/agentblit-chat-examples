@@ -16,6 +16,7 @@ import {
   useRef,
   useState,
 } from "react";
+import { chatAuthHeaders } from "@/lib/auth";
 import { cn } from "@/lib/cn";
 import { uploadChatFiles } from "@/lib/upload";
 import { Message, type ElicitationSubmit } from "./message";
@@ -25,6 +26,7 @@ const MAX_FILE_BYTES = 10 * 1024 * 1024;
 const ACCEPT = "image/*,application/pdf,text/*,.md,.csv,.json,.yaml,.yml,.xml";
 
 type Props = {
+  agentId: string;
   chatUrl: string;
   uploadUrl: string;
   threadId: string;
@@ -39,6 +41,7 @@ type Props = {
  * Uses AI SDK `useChat` + `DefaultChatTransport` against Agentblit v2.
  */
 export function ChatPanel({
+  agentId,
   chatUrl,
   uploadUrl,
   threadId,
@@ -48,8 +51,12 @@ export function ChatPanel({
   onActivity,
 }: Props) {
   const transport = useMemo(
-    () => new DefaultChatTransport({ api: chatUrl }),
-    [chatUrl],
+    () =>
+      new DefaultChatTransport({
+        api: chatUrl,
+        headers: () => chatAuthHeaders(agentId),
+      }),
+    [agentId, chatUrl],
   );
 
   const {
@@ -126,7 +133,7 @@ export function ChatPanel({
     setFiles([]);
     setUploading(true);
     try {
-      const uploaded = await uploadChatFiles(uploadUrl, pending);
+      const uploaded = await uploadChatFiles(uploadUrl, pending, agentId);
       if (text && uploaded.length > 0) {
         await sendMessage({ text, files: uploaded });
       } else if (uploaded.length > 0) {
