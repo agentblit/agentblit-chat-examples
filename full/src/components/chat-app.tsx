@@ -11,7 +11,6 @@ import {
 } from "@/lib/api";
 import {
   ChatApiError,
-  clearChatAccessToken,
   getChatAccessToken,
   startChatLoginRedirect,
   startChatSignOutRedirect,
@@ -19,7 +18,7 @@ import {
 import { ChatPanel } from "./chat-panel";
 import { Sidebar } from "./sidebar";
 
-type AuthGate = "signin" | "forbidden" | "signed_out" | null;
+type AuthGate = "signin" | "forbidden" | null;
 
 type Props = {
   appUrl: string;
@@ -46,7 +45,7 @@ export function ChatApp({
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [error, setError] = useState("");
   const [authGate, setAuthGate] = useState<AuthGate>(null);
-  const [authBusy, setAuthBusy] = useState(false);
+  const [canSignOut, setCanSignOut] = useState(false);
   const signInStarted = useRef(false);
 
   const applyAuthError = useCallback((err: unknown) => {
@@ -76,15 +75,10 @@ export function ChatApp({
   }, [agentId, applyAuthError, threadsUrl]);
 
   const signIn = useCallback(() => {
-    setAuthBusy(true);
     startChatLoginRedirect({ appUrl, agentId });
   }, [agentId, appUrl]);
 
   const signOut = useCallback(() => {
-    clearChatAccessToken(agentId);
-    setThreads([]);
-    setInitialMessages([]);
-    setError("");
     startChatSignOutRedirect({ appUrl, agentId });
   }, [agentId, appUrl]);
 
@@ -92,17 +86,20 @@ export function ChatApp({
     void refreshThreads();
   }, [refreshThreads]);
 
+  useEffect(() => {
+    setCanSignOut(Boolean(getChatAccessToken(agentId)));
+  }, [agentId]);
+
   // First visit needing auth — go straight to Agentblit login.
-  // Do not auto-start after an explicit Sign out (`signed_out`).
   useEffect(() => {
     if (authGate !== "signin") {
       signInStarted.current = false;
       return;
     }
-    if (signInStarted.current || authBusy) return;
+    if (signInStarted.current) return;
     signInStarted.current = true;
     signIn();
-  }, [authBusy, authGate, signIn]);
+  }, [authGate, signIn]);
 
   useEffect(() => {
     if (authGate) {
@@ -181,36 +178,20 @@ export function ChatApp({
     );
   }
 
-  if (authGate === "forbidden" || authGate === "signed_out") {
-    const isForbidden = authGate === "forbidden";
+  if (authGate === "forbidden") {
     return (
       <div className="flex h-dvh flex-col items-center justify-center gap-3 px-6 text-center">
-        <p className="text-sm font-medium text-foreground">
-          {isForbidden ? "No access" : "Signed out"}
-        </p>
+        <p className="text-sm font-medium text-foreground">No access</p>
         <p className="text-sm text-muted-foreground">
-          {isForbidden
-            ? "You are signed in, but this agent is limited to specific users."
-            : "Sign in with an account that has access to this agent."}
+          You are signed in, but this agent is limited to specific users.
         </p>
-        {isForbidden ? (
-          <button
-            type="button"
-            className="cursor-pointer text-sm text-muted-foreground underline hover:text-foreground"
-            onClick={signOut}
-          >
-            Sign out
-          </button>
-        ) : (
-          <button
-            type="button"
-            className="inline-flex h-9 cursor-pointer items-center justify-center rounded-md bg-primary px-4 text-sm font-medium text-primary-foreground disabled:opacity-60"
-            disabled={authBusy}
-            onClick={signIn}
-          >
-            {authBusy ? "Signing in…" : "Sign in"}
-          </button>
-        )}
+        <button
+          type="button"
+          className="cursor-pointer text-sm text-muted-foreground underline hover:text-foreground"
+          onClick={signOut}
+        >
+          Sign out
+        </button>
         {error ? <p className="text-sm text-destructive">{error}</p> : null}
       </div>
     );
@@ -227,9 +208,7 @@ export function ChatApp({
           onSelect={openThread}
           onDelete={(id) => void removeThread(id)}
           onCollapse={() => setSidebarOpen(false)}
-          onSignOut={
-            getChatAccessToken(agentId) ? signOut : undefined
-          }
+          onSignOut={canSignOut ? signOut : undefined}
         />
       ) : null}
 
