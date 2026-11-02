@@ -1,9 +1,14 @@
 /** Public Agentblit chat endpoint config (set in `.env.local`). */
 export function getConfig() {
   const apiBase = process.env.NEXT_PUBLIC_AGENTBLIT_API_BASE?.replace(/\/$/, "");
-  const agentId = process.env.NEXT_PUBLIC_AGENTBLIT_AGENT_ID;
+  const appUrl = (
+    process.env.NEXT_PUBLIC_AGENTBLIT_APP_URL ??
+    process.env.NEXT_PUBLIC_AGENTBLIT_API_BASE
+  )?.replace(/\/$/, "");
+  const agentId = process.env.NEXT_PUBLIC_AGENTBLIT_AGENT_ID?.trim();
   return {
     apiBase,
+    appUrl,
     agentId,
     chatUrl:
       apiBase && agentId

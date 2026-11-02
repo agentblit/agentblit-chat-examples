@@ -1,4 +1,5 @@
 import type { UIMessage } from "ai";
+import { ChatApiError, chatAuthHeaders } from "@/lib/auth";
 
 export type ThreadSummary = {
   id: string;
@@ -12,11 +13,18 @@ async function readJson<T>(res: Response): Promise<T & ApiError> {
   return (await res.json()) as T & ApiError;
 }
 
-export async function listThreads(threadsUrl: string): Promise<ThreadSummary[]> {
-  const res = await fetch(threadsUrl);
+function headers(agentId: string): HeadersInit {
+  return chatAuthHeaders(agentId);
+}
+
+export async function listThreads(
+  threadsUrl: string,
+  agentId: string,
+): Promise<ThreadSummary[]> {
+  const res = await fetch(threadsUrl, { headers: headers(agentId) });
   const data = await readJson<{ threads?: ThreadSummary[] }>(res);
   if (!res.ok || !data.ok) {
-    throw new Error(data.error ?? "Failed to load threads");
+    throw new ChatApiError(data.error ?? "Failed to load threads", res.status);
   }
   return data.threads ?? [];
 }
@@ -24,13 +32,16 @@ export async function listThreads(threadsUrl: string): Promise<ThreadSummary[]> 
 export async function loadThreadMessages(
   threadsUrl: string,
   threadId: string,
+  agentId: string,
 ): Promise<UIMessage[]> {
-  const res = await fetch(`${threadsUrl}/${threadId}/messages`);
+  const res = await fetch(`${threadsUrl}/${threadId}/messages`, {
+    headers: headers(agentId),
+  });
   const data = await readJson<{
     messages?: Array<{ id: string; role: string; parts: unknown[] }>;
   }>(res);
   if (!res.ok || !data.ok) {
-    throw new Error(data.error ?? "Failed to load messages");
+    throw new ChatApiError(data.error ?? "Failed to load messages", res.status);
   }
   return (data.messages ?? []).map((message) => ({
     id: message.id,
@@ -42,10 +53,14 @@ export async function loadThreadMessages(
 export async function deleteThread(
   threadsUrl: string,
   threadId: string,
+  agentId: string,
 ): Promise<void> {
-  const res = await fetch(`${threadsUrl}/${threadId}`, { method: "DELETE" });
+  const res = await fetch(`${threadsUrl}/${threadId}`, {
+    method: "DELETE",
+    headers: headers(agentId),
+  });
   const data = await readJson<Record<string, never>>(res);
   if (!res.ok || !data.ok) {
-    throw new Error(data.error ?? "Failed to delete thread");
+    throw new ChatApiError(data.error ?? "Failed to delete thread", res.status);
   }
 }

@@ -11,7 +11,7 @@ export function EnvMissing() {
         <code className="rounded-md bg-muted px-1.5 py-0.5 text-xs">
           .env.local
         </code>{" "}
-        and set the agent id and API base.
+        and set the agent id, API base, and (optional) app URL.
       </p>
     </main>
   );

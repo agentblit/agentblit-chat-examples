@@ -12,6 +12,7 @@ type Props = {
   onSelect: (id: string) => void;
   onDelete: (id: string) => void;
   onCollapse: () => void;
+  onSignOut?: () => void;
 };
 
 export function Sidebar({
@@ -22,6 +23,7 @@ export function Sidebar({
   onSelect,
   onDelete,
   onCollapse,
+  onSignOut,
 }: Props) {
   return (
     <aside className="flex h-full w-60 shrink-0 flex-col overflow-hidden border-r border-border bg-muted/40">
@@ -96,6 +98,18 @@ export function Sidebar({
           </ul>
         )}
       </div>
+
+      {onSignOut ? (
+        <div className="shrink-0 border-t border-border px-3 py-3">
+          <button
+            type="button"
+            onClick={onSignOut}
+            className="cursor-pointer text-xs text-muted-foreground underline hover:text-foreground"
+          >
+            Sign out
+          </button>
+        </div>
+      ) : null}
     </aside>
   );
 }
